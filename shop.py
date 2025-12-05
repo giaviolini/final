@@ -1,7 +1,7 @@
 import pygame
 
-WIDTH = 1440
-HEIGHT = 900
+WIDTH = 1728
+HEIGHT = 1100
 FPS = 40
 
 # Colors

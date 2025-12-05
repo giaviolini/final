@@ -11,15 +11,13 @@ from narrative import NarrativeSequence
 pygame.init()
 
 # Game settings
-WIDTH = 1440
-HEIGHT = 900
+WIDTH = 1728
+HEIGHT = 1100
 FPS = 40
 
 # Colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-GRAY = (150, 150, 150)
-LIGHT_GRAY = (200, 200, 200)
 GOLD = (255, 215, 0)
 GREEN = (50, 200, 50)
 BLUE = (50, 150, 255)
@@ -106,12 +104,12 @@ async def main():
         frame = load_and_scale_image_Kitty(f"ninja-run_{i:02d}.png", ninja_width, ninja_height)
         ninja_frames.append(frame)
 
-    ninja_cat = NinjaCat(ninja_frames, 0, HEIGHT - ninja_frames[0].get_height() - 155, 10)
+    ninja_cat = NinjaCat(ninja_frames, 0, HEIGHT - ninja_frames[0].get_height() - 190, 10)
 
     running = True
     while running:
         clock.tick(FPS)
-        await asyncio.sleep(0)  # async for PYGBAG - web page
+        await asyncio.sleep(0)
         
         # Handle events
         for event in pygame.event.get():
@@ -226,7 +224,6 @@ async def main():
             screen.blit(bg, (0, 0))
             
             if not shop_open:
-                # Draw game
                 for item in items_list:
                     item.display(screen)
                 
@@ -235,7 +232,6 @@ async def main():
                 
                 ninja_cat.display(screen)
                 
-                # Display score and coins
                 font = pygame.font.Font(None, 36)
                 score_text = font.render(f"Score: {score}", True, WHITE)
                 screen.blit(score_text, (10, 10))
@@ -243,15 +239,12 @@ async def main():
                 coin_text = font.render(f"Coins: {coins}", True, GOLD)
                 screen.blit(coin_text, (10, 40))
                 
-                # Display active power-ups
                 draw_power_up_status(screen)
                 
-                # Shop hint
                 hint_font = pygame.font.Font(None, 20)
                 hint = hint_font.render("Press ESC for Shop", True, WHITE)
                 screen.blit(hint, (WIDTH - hint.get_width() - 10, 10))
             else:
-                # Draw shop
                 draw_shop(screen, coins)
         
         pygame.display.flip()

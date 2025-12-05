@@ -1,8 +1,8 @@
 import pygame
 import random
 
-WIDTH = 1440
-HEIGHT = 900
+WIDTH = 1728
+HEIGHT = 1100
 FPS = 40
 
 WHITE = (255, 255, 255)
@@ -83,7 +83,7 @@ class Statement:
     def update(self):
         self.y += self.speed
         if self.y > HEIGHT:
-            self.y = -self.height - random.randint(0, 300)  # Add random spacing
+            self.y = -self.height - random.randint(0, 300)
             self.x = random.randint(0, WIDTH - self.width)
             
     def display(self, screen):

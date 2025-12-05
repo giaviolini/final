@@ -31,10 +31,6 @@ class NarrativeSequence:
                 placeholder.blit(text, text_rect)
                 self.images.append(placeholder)
         
-        # If no images loaded, mark as finished
-        if not self.images:
-            print("WARNING: No narrative images loaded!")
-            self.finished = True
         
     def update(self):
         if self.finished:
