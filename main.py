@@ -3,7 +3,8 @@ import os
 import pygame
 import random
 from entities import STATEMENTS, Statement, Item, NinjaCat
-from shop import power_up_inventory, active_power_ups, POWER_UP_COSTS, POWER_UP_DURATION, draw_shop, draw_power_up_status
+from shop import (power_up_inventory, active_power_ups, draw_shop, 
+                  draw_power_up_status, handle_shop_input, update_power_up_timers)
 
 # Initialize Pygame
 pygame.init()
@@ -61,7 +62,6 @@ def load_and_scale_image_Kitty(filename, scale_width, scale_height):
 
 async def main():
     global score, coins, left_pressed, right_pressed, game_paused, shop_open
-    global active_power_ups, power_up_inventory
 
     coins = 0 
     
@@ -83,7 +83,6 @@ async def main():
         y = -100 - (i * 700)
         statement_list.append(Statement(stmt_data, x, y, 2))
     
-    
     # Load ninja cat 
     ninja_frames = []
     ninja_width = WIDTH // 6
@@ -98,55 +97,20 @@ async def main():
     running = True
     while running:
         clock.tick(FPS)
-
-        #anysc for PYGBAG - web page
-        await asyncio.sleep(0) 
+        await asyncio.sleep(0)  # async for PYGBAG - web page
         
-       # Handle events
+        # Handle events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     shop_open = not shop_open
-                    
                 elif shop_open:
-                    # Shop controls
-                    if event.key == pygame.K_1:
-                        key = 'trash_immunity'
-                        if not power_up_inventory[key] and coins >= POWER_UP_COSTS[key]:
-                            coins -= POWER_UP_COSTS[key]
-                            power_up_inventory[key] = True
-                        elif power_up_inventory[key]:
-                            active_power_ups[key] = POWER_UP_DURATION
-                            shop_open = False
-                            
-                    elif event.key == pygame.K_2:
-                        key = 'double_coins'
-                        if not power_up_inventory[key] and coins >= POWER_UP_COSTS[key]:
-                            coins -= POWER_UP_COSTS[key]
-                            power_up_inventory[key] = True
-                        elif power_up_inventory[key]:
-                            active_power_ups[key] = POWER_UP_DURATION
-                            shop_open = False
-                            
-                    elif event.key == pygame.K_3:
-                        key = 'negative_immunity'
-                        if not power_up_inventory[key] and coins >= POWER_UP_COSTS[key]:
-                            coins -= POWER_UP_COSTS[key]
-                            power_up_inventory[key] = True
-                        elif power_up_inventory[key]:
-                            active_power_ups[key] = POWER_UP_DURATION
-                            shop_open = False
-                            
-                    elif event.key == pygame.K_4:
-                        key = 'universal_bonus'
-                        if not power_up_inventory[key] and coins >= POWER_UP_COSTS[key]:
-                            coins -= POWER_UP_COSTS[key]
-                            power_up_inventory[key] = True
-                        elif power_up_inventory[key]:
-                            active_power_ups[key] = POWER_UP_DURATION
-                            shop_open = False
+                    # Handle shop input using refactored function
+                    coins, should_close = handle_shop_input(event.key, coins)
+                    if should_close:
+                        shop_open = False
                 else:
                     # Game controls
                     if event.key == pygame.K_LEFT:
@@ -162,10 +126,8 @@ async def main():
         
         # Update game (only if shop is closed)
         if not shop_open:
-            # Update power-up timers
-            for key in active_power_ups:
-                if active_power_ups[key] > 0:
-                    active_power_ups[key] -= 1
+            # Update power-up timers using refactored function
+            update_power_up_timers()
             
             ninja_cat.update(left_pressed, right_pressed)
             
@@ -250,6 +212,7 @@ async def main():
         else:
             # Draw shop
             draw_shop(screen, coins)
+        
         pygame.display.flip()
     
     pygame.quit()
