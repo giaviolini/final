@@ -5,6 +5,7 @@ import random
 from entities import STATEMENTS, Statement, Item, NinjaCat
 from shop import (power_up_inventory, active_power_ups, draw_shop, 
                   draw_power_up_status, handle_shop_input, update_power_up_timers)
+from narrative import NarrativeSequence
 
 # Initialize Pygame
 pygame.init()
@@ -63,8 +64,21 @@ def load_and_scale_image_Kitty(filename, scale_width, scale_height):
 async def main():
     global score, coins, left_pressed, right_pressed, game_paused, shop_open
 
+    # Game state: "NARRATIVE" or "PLAYING"
+    game_state = "NARRATIVE"
+    
+    # Initialize narrative sequence
+    narrative = NarrativeSequence([
+        "data/narratice1.png",
+        "data/narratice2.png",
+        "data/narratice3.png",
+        "data/narratice4.png",
+        "data/narratice5.png"
+    ], delay=3000)
+
     coins = 0 
     
+    # Load game assets
     bg = load_and_scale_image("background.png", WIDTH, HEIGHT)
     
     item_width = WIDTH // 18
@@ -103,29 +117,45 @@ async def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+                
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    shop_open = not shop_open
-                elif shop_open:
-                    # Handle shop input using refactored function
-                    coins, should_close = handle_shop_input(event.key, coins)
-                    if should_close:
-                        shop_open = False
-                else:
-                    # Game controls
-                    if event.key == pygame.K_LEFT:
-                        left_pressed = True
-                    elif event.key == pygame.K_RIGHT:
-                        right_pressed = True
+                # Narrative controls
+                if game_state == "NARRATIVE":
+                    # Any key skips narrative
+                    narrative.skip()
+                    
+                # Game controls
+                elif game_state == "PLAYING":
+                    if event.key == pygame.K_ESCAPE:
+                        shop_open = not shop_open
+                    elif shop_open:
+                        # Handle shop input using refactored function
+                        coins, should_close = handle_shop_input(event.key, coins)
+                        if should_close:
+                            shop_open = False
+                    else:
+                        # Game controls
+                        if event.key == pygame.K_LEFT:
+                            left_pressed = True
+                        elif event.key == pygame.K_RIGHT:
+                            right_pressed = True
                         
-            elif event.type == pygame.KEYUP and not shop_open:
+            elif event.type == pygame.KEYUP and game_state == "PLAYING" and not shop_open:
                 if event.key == pygame.K_LEFT:
                     left_pressed = False
                 elif event.key == pygame.K_RIGHT:
                     right_pressed = False
         
-        # Update game (only if shop is closed)
-        if not shop_open:
+        # Update based on game state
+        if game_state == "NARRATIVE":
+            narrative.update()
+            
+            # Transition to game when narrative finishes
+            if narrative.finished:
+                game_state = "PLAYING"
+                print("Starting game!")
+                
+        elif game_state == "PLAYING" and not shop_open:
             # Update power-up timers using refactored function
             update_power_up_timers()
             
@@ -181,37 +211,48 @@ async def main():
                     statement.y = -statement.height - random.randint(0, 300)
                     statement.x = random.randint(0, WIDTH - statement.width)
         
-        # Draw
-        screen.blit(bg, (0, 0))
-        
-        if not shop_open:
-            # Draw game
-            for item in items_list:
-                item.display(screen)
+        # Draw based on game state
+        if game_state == "NARRATIVE":
+            # Draw narrative sequence
+            narrative.draw(screen)
             
-            for statement in statement_list:
-                statement.display(screen)
+            # Optional: Add a "Press any key to skip" hint
+            font = pygame.font.Font(None, 24)
+            hint = font.render("Press any key to skip...", True, WHITE)
+            hint_rect = hint.get_rect(center=(WIDTH // 2, HEIGHT - 30))
+            screen.blit(hint, hint_rect)
             
-            ninja_cat.display(screen)
+        elif game_state == "PLAYING":
+            screen.blit(bg, (0, 0))
             
-            # Display score and coins
-            font = pygame.font.Font(None, 36)
-            score_text = font.render(f"Score: {score}", True, WHITE)
-            screen.blit(score_text, (10, 10))
-            
-            coin_text = font.render(f"Coins: {coins}", True, GOLD)
-            screen.blit(coin_text, (10, 40))
-            
-            # Display active power-ups
-            draw_power_up_status(screen)
-            
-            # Shop hint
-            hint_font = pygame.font.Font(None, 20)
-            hint = hint_font.render("Press ESC for Shop", True, WHITE)
-            screen.blit(hint, (WIDTH - hint.get_width() - 10, 10))
-        else:
-            # Draw shop
-            draw_shop(screen, coins)
+            if not shop_open:
+                # Draw game
+                for item in items_list:
+                    item.display(screen)
+                
+                for statement in statement_list:
+                    statement.display(screen)
+                
+                ninja_cat.display(screen)
+                
+                # Display score and coins
+                font = pygame.font.Font(None, 36)
+                score_text = font.render(f"Score: {score}", True, WHITE)
+                screen.blit(score_text, (10, 10))
+                
+                coin_text = font.render(f"Coins: {coins}", True, GOLD)
+                screen.blit(coin_text, (10, 40))
+                
+                # Display active power-ups
+                draw_power_up_status(screen)
+                
+                # Shop hint
+                hint_font = pygame.font.Font(None, 20)
+                hint = hint_font.render("Press ESC for Shop", True, WHITE)
+                screen.blit(hint, (WIDTH - hint.get_width() - 10, 10))
+            else:
+                # Draw shop
+                draw_shop(screen, coins)
         
         pygame.display.flip()
     
